@@ -28,8 +28,8 @@ module.exports = {
 		if (request.status === 'success') {
 			const embed = new MessageEmbed()
 				.setColor('#3BA55C')
-				.setDescription(`[View on Etherscan](https://rinkeby.etherscan.io/tx/${request.message})`);
-			return interaction.followUp({ content: `Transaction for ${amount} ETH created.`, embeds: [embed] });
+				.setDescription(`[View on Arbiscan](https://sepolia.arbiscan.io//tx/${request.message})`);
+			return interaction.followUp({ content: `Transaction for ${amount} OVL created.`, embeds: [embed] });
 		}
 		else {
 			return interaction.followUp(`Failed to send funds. Error: ${request.message}`);

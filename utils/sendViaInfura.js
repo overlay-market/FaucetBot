@@ -1,12 +1,13 @@
 /* eslint-disable no-inline-comments */
-const { INFURA_URL, PRIVATE_KEY, FROM_ADDRESS, maxFeePerGas: MAX_GAS } = require('../config.json');
+const { INFURA_URL, PRIVATE_KEY, FROM_ADDRESS, maxFeePerGas: MAX_GAS, NETWORK } = require('../config.json');
 const axios = require('axios');
 const ethers = require('ethers');
 const { default: Common, Chain, Hardfork } = require('@ethereumjs/common')
 const { FeeMarketEIP1559Transaction } = require('@ethereumjs/tx');
-const common = new Common({ chain: Chain.Rinkeby, hardfork: Hardfork.London })
+const common = Common.custom({ chain: NETWORK, hardfork: Hardfork.London })
+const erc20Contract = require('../utils/erc20Contract.js');
 
-const provider = new ethers.providers.JsonRpcProvider(INFURA_URL);
+const provider = new ethers.JsonRpcProvider(INFURA_URL);
 const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
 
 module.exports = async (toAddress, amount) => {
@@ -16,46 +17,14 @@ module.exports = async (toAddress, amount) => {
 	}
 	// eslint-disable-next-line no-async-promise-executor
 	return new Promise(async (resolve, reject) => {
-		const balance = ethers.utils.formatEther(await provider.getBalance(FROM_ADDRESS));
-		if (balance < parseFloat(amount)) {
-			reject ({ status: 'error', message: `I'm out of funds! Please donate: ${FROM_ADDRESS}` });
-		}
-		const nonce = await wallet.getTransactionCount();
-		const amountInWei = ethers.utils.parseEther(amount);
-		const txData = {
-			'data': '0x', // Changing this will cost you 4 gas for a zero byte, 68 gas for non-zeros
-			'gasLimit': '0x5208', // 21000
-			'maxPriorityFeePerGas': 65000000000, // 65 gwei
-			'maxFeePerGas': MAX_GAS, // priorityFeePerGas + max base fee
-			'nonce': nonce,
-			'to': toAddress,
-			'value': amountInWei._hex,
-			'chainId': '0x04',
-			'accessList': [],
-			'type': '0x02',
-		}
-
-		const tx = FeeMarketEIP1559Transaction.fromTxData(txData, { common });
-		const privateKey = Buffer.from(wallet.privateKey.slice(2), 'hex');
-		const signedTx = await tx.sign(privateKey);
-		const serializedTx = signedTx.serialize();
-		const rawTx = '0x' + serializedTx.toString('hex');
+		const tokenContract = await erc20Contract(wallet)
+		const balance = ethers.formatEther(await provider.getBalance(FROM_ADDRESS));
+		const amountInWei = ethers.parseEther(amount);
 
 		try {
-			const response = await axios.post(INFURA_URL, {
-				method: 'eth_sendRawTransaction',
-				params: [rawTx],
-				id: 1,
-				jsonrpc: '2.0',
-			});
-			if (response.data.result) {
-				console.log('Tx created: https://rinkeby.etherscan.io/tx/' + response.data.result);
-				resolve({ status: 'success', message: response.data.result });
-			}
-			else {
-				console.log('Error in infura call:', response.data)
-				reject({ status: 'error', message: response.data || 'Something went wrong. Error not found, please check logs' });
-			}
+			tx = await tokenContract.transfer(toAddress, amountInWei)
+			console.log({tx})
+			resolve({ status: 'success', message: tx.hash ?? '' });
 		}
 		catch (error) {
 			console.log(error);
