@@ -1,4 +1,4 @@
-const { amount, infura } = require('../config.json');
+const { amount, infura, arbiscanUrl } = require('../config.json');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 const sendViaAlchemy = require('../utils/sendViaAlchemy.js');
@@ -28,7 +28,7 @@ module.exports = {
 		if (request.status === 'success') {
 			const embed = new MessageEmbed()
 				.setColor('#3BA55C')
-				.setDescription(`[View on Arbiscan](https://sepolia.arbiscan.io//tx/${request.message})`);
+				.setDescription(`[View on Arbiscan](${arbiscanUrl}${request.message})`);
 			return interaction.followUp({ content: `Transaction for ${amount} OVL created.`, embeds: [embed] });
 		}
 		else {
