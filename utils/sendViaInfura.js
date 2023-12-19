@@ -1,17 +1,17 @@
 /* eslint-disable no-inline-comments */
-const { INFURA_RINKEBY_URL, PRIVATE_KEY, FROM_ADDRESS, maxFeePerGas: MAX_GAS } = require('../config.json');
+const { INFURA_URL, PRIVATE_KEY, FROM_ADDRESS, maxFeePerGas: MAX_GAS } = require('../config.json');
 const axios = require('axios');
 const ethers = require('ethers');
 const { default: Common, Chain, Hardfork } = require('@ethereumjs/common')
 const { FeeMarketEIP1559Transaction } = require('@ethereumjs/tx');
 const common = new Common({ chain: Chain.Rinkeby, hardfork: Hardfork.London })
 
-const provider = new ethers.providers.JsonRpcProvider(INFURA_RINKEBY_URL);
+const provider = new ethers.providers.JsonRpcProvider(INFURA_URL);
 const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
 
 module.exports = async (toAddress, amount) => {
 	console.log('Received new request from ', toAddress, 'for', amount)
-	if (!PRIVATE_KEY || !FROM_ADDRESS || !INFURA_RINKEBY_URL) {
+	if (!PRIVATE_KEY || !FROM_ADDRESS || !INFURA_URL) {
 		return { status: 'error', message: 'Missing environment variables, please ask human to set them up.' };
 	}
 	// eslint-disable-next-line no-async-promise-executor
@@ -42,7 +42,7 @@ module.exports = async (toAddress, amount) => {
 		const rawTx = '0x' + serializedTx.toString('hex');
 
 		try {
-			const response = await axios.post(INFURA_RINKEBY_URL, {
+			const response = await axios.post(INFURA_URL, {
 				method: 'eth_sendRawTransaction',
 				params: [rawTx],
 				id: 1,

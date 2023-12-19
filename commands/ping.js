@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { ALCHEMY_RINKEBY_URL, INFURA_RINKEBY_URL, FROM_ADDRESS, infura } = require('../config.json');
+const { ALCHEMY_URL, INFURA_URL, FROM_ADDRESS, infura } = require('../config.json');
 const ethers = require('ethers');
-const provider = new ethers.providers.JsonRpcProvider(infura ? INFURA_RINKEBY_URL : ALCHEMY_RINKEBY_URL);
+const provider = new ethers.providers.JsonRpcProvider(infura ? INFURA_URL : ALCHEMY_URL);
 
 module.exports = {
 	data: new SlashCommandBuilder()

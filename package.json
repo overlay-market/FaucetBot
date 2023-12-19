@@ -1,10 +1,8 @@
 {
   "name": "faucetbot",
   "version": "1.0.0",
-  "description": "Discord bot that dispenses testnet ETH",
+  "description": "Discord bot that dispenses ERC20",
   "main": "index.js",
-  "repository": "https://github.com/AlmostEfficient/FaucetBot.git",
-  "author": "Abdullah Raza raza@cyleum.io",
   "license": "GNU",
   "private": true,
   "dependencies": {
