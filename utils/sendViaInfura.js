@@ -23,7 +23,6 @@ module.exports = async (toAddress, amount) => {
 
 		try {
 			tx = await tokenContract.transfer(toAddress, amountInWei)
-			console.log({tx})
 			resolve({ status: 'success', message: tx.hash ?? '' });
 		}
 		catch (error) {
