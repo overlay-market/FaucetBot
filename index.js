@@ -4,7 +4,12 @@ const fs = require('fs');
 const isAddress = require('./utils/address');
 const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
 const Keyv = require('keyv');
-const keyv = new Keyv();
+const { KeyvFile } = require('keyv-file')
+const keyv = new Keyv({
+	store: new KeyvFile({
+	  filename: `keyv-data.json`, // the file path to store the data
+	})
+  })
 
 client.commands = new Collection();
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
@@ -50,10 +55,7 @@ client.on('interactionCreate', async interaction => {
 		if (!approvedRoles.some(role => interaction.member.roles.cache.has(role))) {
 			const lastRequested = await keyv.get(interaction.user.id);
 			if (lastRequested) {
-				if (Date.now() - lastRequested < cooldown) {
-					const timeLeft = Math.floor(((cooldown - (Date.now() - lastRequested)) / 1000) / 60);
-					return interaction.reply(`You can only request funds once every 60 minutes. Please try again in ${timeLeft} minutes.`);
-				}
+				return interaction.reply(`You can only request funds once.`);
 			}
 		}
 	}
@@ -63,7 +65,7 @@ client.on('interactionCreate', async interaction => {
 		if (command.data.name === 'faucet') {
 			// If not an approved role, set the last requested time
 			if (!approvedRoles.some(role => interaction.member.roles.cache.has(role))) {
-				await keyv.set(interaction.user.id, Date.now());
+				await keyv.set(interaction.user.id, interaction.options.get('address').value.trim());
 			}
 			await keyv.set('lastTx', Date.now());
 		}

@@ -11,7 +11,8 @@
     "@discordjs/rest": "^0.1.0-canary.0",
     "discord-api-types": "^0.23.1",
     "discord.js": "^13.1.0",
-    "keyv": "^4.0.3"
+    "keyv": "^4.0.3",
+    "keyv-file": "^0.3.0"
   },
   "devDependencies": {
     "dotenv": "^10.0.0",

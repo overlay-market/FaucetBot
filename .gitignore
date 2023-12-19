@@ -1,6 +1,9 @@
 # Discord config
 config.json
 
+# keyv data
+keyv-data.json
+
 # Logs
 logs
 *.log
