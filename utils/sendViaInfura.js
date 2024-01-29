@@ -10,8 +10,8 @@ const erc20Contract = require('../utils/erc20Contract.js');
 const provider = new ethers.JsonRpcProvider(INFURA_URL);
 const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
 
-module.exports = async (toAddress, amount) => {
-	console.log('Received new request from ', toAddress, 'for', amount)
+module.exports = async (toAddress, amountToken, amountEth) => {
+	console.log('Received new request from ', toAddress, 'for', amountToken, 'OVL and ', amountEth, 'eth')
 	if (!PRIVATE_KEY || !FROM_ADDRESS || !INFURA_URL) {
 		return { status: 'error', message: 'Missing environment variables, please ask human to set them up.' };
 	}
@@ -19,11 +19,19 @@ module.exports = async (toAddress, amount) => {
 	return new Promise(async (resolve, reject) => {
 		const tokenContract = await erc20Contract(wallet)
 		const balance = ethers.formatEther(await provider.getBalance(FROM_ADDRESS));
-		const amountInWei = ethers.parseEther(amount);
+		const amountTokenInWei = ethers.parseEther(amountToken);
+		const amountEthInWei = ethers.parseEther(amountEth);
+
+		const txData = {
+			'to': toAddress,
+			'value': amountEthInWei,
+		}
 
 		try {
-			tx = await tokenContract.transfer(toAddress, amountInWei)
-			resolve({ status: 'success', message: tx.hash ?? '' });
+			tx = await tokenContract.transfer(toAddress, amountTokenInWei)
+			txEth = await wallet.sendTransaction(txData)
+
+			resolve({ status: 'success', message: tx.hash ?? '', messageEth: txEth.hash ?? '' });
 		}
 		catch (error) {
 			console.log(error);
