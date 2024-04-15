@@ -17,8 +17,6 @@ module.exports = async (toAddress, amountToken, amountEth) => {
 	}
 	// eslint-disable-next-line no-async-promise-executor
 	return new Promise(async (resolve, reject) => {
-		const tokenContract = await erc20Contract(wallet)
-		const balance = ethers.formatEther(await provider.getBalance(FROM_ADDRESS));
 		const amountTokenInWei = ethers.parseEther(amountToken);
 		const amountEthInWei = ethers.parseEther(amountEth);
 
@@ -28,6 +26,7 @@ module.exports = async (toAddress, amountToken, amountEth) => {
 		}
 
 		try {
+			const tokenContract = await erc20Contract(wallet)
 			tx = await tokenContract.transfer(toAddress, amountTokenInWei)
 			txEth = await wallet.sendTransaction(txData)
 
