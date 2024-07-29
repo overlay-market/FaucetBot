@@ -1,10 +1,10 @@
-const { ALCHEMY_RINKEBY_URL, PRIVATE_KEY, FROM_ADDRESS, maxFeePerGas: MAX_GAS } = require('../config.json');
+const { ALCHEMY_URL, PRIVATE_KEY, FROM_ADDRESS, maxFeePerGas: MAX_GAS } = require('../config.json');
 const { createAlchemyWeb3 } = require('@alch/alchemy-web3');
-const web3 = createAlchemyWeb3(ALCHEMY_RINKEBY_URL)
+const web3 = createAlchemyWeb3(ALCHEMY_URL)
 
 module.exports = async (toAddress, amount) => {
 	console.log('Received new request from ', toAddress, 'for', amount)
-	if (!PRIVATE_KEY || !FROM_ADDRESS || !ALCHEMY_RINKEBY_URL) {
+	if (!PRIVATE_KEY || !FROM_ADDRESS || !ALCHEMY_URL) {
 		return ({ status: 'error', message: 'Missing environment variables, please ask human to set them up.' });
 	}
 	// eslint-disable-next-line no-async-promise-executor

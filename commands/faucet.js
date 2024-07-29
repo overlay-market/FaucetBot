@@ -1,4 +1,4 @@
-const { amount, infura } = require('../config.json');
+const { amount, amountEth, infura, arbiscanUrl } = require('../config.json');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 const sendViaAlchemy = require('../utils/sendViaAlchemy.js');
@@ -23,13 +23,16 @@ module.exports = {
 
 		await	interaction.reply(reply);
 
-		const request = infura ? await sendViaInfura(address, amount) : await sendViaAlchemy(address, amount);
+		const request = infura ? await sendViaInfura(address, amount, amountEth) : await sendViaAlchemy(address, amount);
 
 		if (request.status === 'success') {
 			const embed = new MessageEmbed()
 				.setColor('#3BA55C')
-				.setDescription(`[View on Etherscan](https://rinkeby.etherscan.io/tx/${request.message})`);
-			return interaction.followUp({ content: `Transaction for ${amount} ETH created.`, embeds: [embed] });
+				.setDescription(`[View on Arbiscan](${arbiscanUrl}${request.message})`);
+			const embedEth = new MessageEmbed()
+				.setColor('#3BA55C')
+				.setDescription(`[View on Arbiscan](${arbiscanUrl}${request.messageEth})`);
+			return interaction.followUp({ content: `Transaction for ${amount} OVL and ${amountEth} Eth created.`, embeds: [embed, embedEth] });
 		}
 		else {
 			return interaction.followUp(`Failed to send funds. Error: ${request.message}`);
