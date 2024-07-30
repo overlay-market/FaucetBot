@@ -80,20 +80,20 @@ client.on('interactionCreate', async interaction => {
 				return interaction.reply(`You can only request funds once.`);
 			}
 		}
+	}
 
-		try {
-			await command.execute(interaction);
+	try {
+		await command.execute(interaction);
 
-			if (command.data.name === 'faucet') {
-				if (!approvedRoles.some(role => interaction.member.roles.cache.has(role))) {
-					await keyv.set(interaction.user.id, address);
-				}
-				await keyv.set('lastTx', Date.now());
+		if (command.data.name === 'faucet') {
+			if (!approvedRoles.some(role => interaction.member.roles.cache.has(role))) {
+				await keyv.set(interaction.user.id, address);
 			}
-		} catch (error) {
-			console.error(error);
-			await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+			await keyv.set('lastTx', Date.now());
 		}
+	} catch (error) {
+		console.error(error);
+		await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
 	}
 });
 

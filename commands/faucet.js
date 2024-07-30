@@ -1,7 +1,6 @@
 const { amount, amountEth, infura, arbiscanUrl, movementExplorerUrl } = require('../config.json');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
-const sendViaAlchemy = require('../utils/sendViaAlchemy.js');
 const sendViaInfura = require('../utils/sendViaInfura.js');
 const getMoveHash = require('../utils/getMoveHash.js');
 
