@@ -45,16 +45,14 @@ client.on('interactionCreate', async interaction => {
 
 	if (!command) return;
 
+	let keyv;
+	let address;
+
 	// Rate limiting and cooldowns for faucet requests
 	if (command.data.name === 'faucet') {
-		const address = interaction.options.getString('address').trim();
+		address = interaction.options.getString('address').trim();
 		const chain = interaction.options.getString('chain').toLowerCase();
 
-		if (!isAddress(address)) {
-			return interaction.reply('Please enter a valid Ethereum Address');
-		}
-
-		let keyv;
 		switch (chain) {
 			case 'arb':
 				keyv = keyvArb;
@@ -63,7 +61,11 @@ client.on('interactionCreate', async interaction => {
 				keyv = keyvMove;
 				break;
 			default:
-				return interaction.reply('Unsupported chain specified.');
+				return interaction.reply('Unsupported chain specified. Use `arb` or `move`.');
+		}
+
+		if (!isAddress(address)) {
+			return interaction.reply('Please enter a valid Ethereum Address');
 		}
 
 		// Check last transaction timestamp

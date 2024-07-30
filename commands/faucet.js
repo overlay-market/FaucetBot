@@ -60,7 +60,7 @@ module.exports = {
 					}
 				}
 			} else {
-				return interaction.followUp('Unsupported chain specified.');
+				return interaction.followUp('Unsupported chain specified. Use `arb` or `move`.');
 			}
 
 			if (request.status === 'success') {
