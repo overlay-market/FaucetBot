@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { ALCHEMY_URL, INFURA_URL, FROM_ADDRESS, infura, NETWORK, tokenAddress } = require('../config.json');
+const { ALCHEMY_URL, INFURA_URL, FROM_ADDRESS, infura, NETWORK } = require('../config.json');
 const ethers = require('ethers');
 const provider = new ethers.JsonRpcProvider(infura ? INFURA_URL : ALCHEMY_URL, NETWORK);
 const erc20Contract = require('../utils/erc20Contract.js');
