@@ -1,40 +1,61 @@
 /* eslint-disable no-inline-comments */
-const { INFURA_URL, PRIVATE_KEY, FROM_ADDRESS, maxFeePerGas: MAX_GAS, NETWORK } = require('../config.json');
-const axios = require('axios');
+const { INFURA_URL, MOVE_URL, PRIVATE_KEY, FROM_ADDRESS, CONTRACT_ADDRESSES } = require('../config.json');
 const ethers = require('ethers');
-const { default: Common, Chain, Hardfork } = require('@ethereumjs/common')
-const { FeeMarketEIP1559Transaction } = require('@ethereumjs/tx');
-const common = Common.custom({ chain: NETWORK, hardfork: Hardfork.London })
 const erc20Contract = require('../utils/erc20Contract.js');
 
-const provider = new ethers.JsonRpcProvider(INFURA_URL);
-const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
+module.exports = async (toAddress, amountToken, amountEth, chain) => {
+	console.log(`Received new request from ${toAddress} for ${amountToken} OVL and ${amountEth} ETH on chain ${chain}`);
 
-module.exports = async (toAddress, amountToken, amountEth) => {
-	console.log('Received new request from ', toAddress, 'for', amountToken, 'OVL and ', amountEth, 'eth')
-	if (!PRIVATE_KEY || !FROM_ADDRESS || !INFURA_URL) {
+	if (!PRIVATE_KEY || !INFURA_URL || !MOVE_URL || !FROM_ADDRESS) {
 		return { status: 'error', message: 'Missing environment variables, please ask human to set them up.' };
 	}
-	// eslint-disable-next-line no-async-promise-executor
-	return new Promise(async (resolve, reject) => {
+
+	// Determine the network settings based on the input chain
+	let networkUrl;
+	let contractAddress;
+	let sendEth = false;
+
+	switch (chain.toLowerCase()) {
+		case 'arb': // Arbitrum Sepolia
+			networkUrl = INFURA_URL;
+			contractAddress = CONTRACT_ADDRESSES.arb;
+			sendEth = true;
+			break;
+		case 'move': // Move chain
+			networkUrl = MOVE_URL;
+			contractAddress = CONTRACT_ADDRESSES.move;
+			sendEth = true;
+			break;
+		default:
+			return { status: 'error', message: 'Unsupported chain specified.' };
+	}
+
+	const provider = new ethers.JsonRpcProvider(networkUrl);
+	const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
+
+	return new Promise(async (resolve) => {
 		const amountTokenInWei = ethers.parseEther(amountToken);
 		const amountEthInWei = ethers.parseEther(amountEth);
 
-		const txData = {
-			'to': toAddress,
-			'value': amountEthInWei,
-		}
-
 		try {
-			const tokenContract = await erc20Contract(wallet)
-			tx = await tokenContract.transfer(toAddress, amountTokenInWei)
-			txEth = await wallet.sendTransaction(txData)
+			// Initialize the token contract with the correct address for the chain
+			const tokenContract = await erc20Contract(wallet, contractAddress);
+			// Transfer OVL tokens
+			const txToken = await tokenContract.transfer(toAddress, amountTokenInWei);
 
-			resolve({ status: 'success', message: tx.hash ?? '', messageEth: txEth.hash ?? '' });
+			let txEth;
+			if (sendEth && amountEthInWei > 0n) {
+				txEth = await wallet.sendTransaction({ to: toAddress, value: amountEthInWei });
+			}
+
+			resolve({
+				status: 'success',
+				message: txToken.hash ?? '',
+				messageEth: txEth ? txEth.hash : ''
+			});
+		} catch (error) {
+			console.error(error);
+			resolve({ status: 'error', message: 'Transaction failed. Check logs for details.' });
 		}
-		catch (error) {
-			console.log(error);
-			return { status: 'error', message: 'Unable to make call to infura node. Please check logs.' };
-		}
-	})
-}
+	});
+};
