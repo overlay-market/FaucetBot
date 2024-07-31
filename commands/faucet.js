@@ -34,7 +34,7 @@ module.exports = {
 			let ethTransactionHash = '';
 			let tokenExplorerUrl = '';
 			let ethExplorerUrl = '';
-			let ethSign = '';
+			let ethSymbol = '';
 
 			if (chain === 'arb' || chain === 'move') {
 				// Send the transaction and get the response
@@ -48,7 +48,7 @@ module.exports = {
 						ethTransactionHash = await getMoveHash(request.messageEth);
 						ethExplorerUrl = `${movementExplorerUrl}${ethTransactionHash}`;
 
-						ethSign = 'MOVE';
+						ethSymbol = 'MOVE';
 					} else {
 						tokenTransactionHash = request.message;
 						tokenExplorerUrl = `${arbiscanUrl}${tokenTransactionHash}`;
@@ -56,7 +56,7 @@ module.exports = {
 						ethTransactionHash = request.messageEth;
 						ethExplorerUrl = `${arbiscanUrl}${ethTransactionHash}`;
 
-						ethSign = 'ETH';
+						ethSymbol = 'ETH';
 					}
 				}
 			} else {
@@ -74,16 +74,16 @@ module.exports = {
 				const embedEth = new MessageEmbed()
 					.setColor('#3BA55C')
 					.setDescription(
-						`ETH Transaction: [View on Explorer](${ethExplorerUrl})`
+						`${ethSymbol} Transaction: [View on Explorer](${ethExplorerUrl})`
 					);
 
-				return interaction.followUp({ content: `Transaction for ${amount} OVL and ${amountEth} ${ethSign} created.`, embeds: [embed, embedEth] });
+				return interaction.followUp({ content: `Transaction for ${amount} OVL and ${amountEth} ${ethSymbol} created.`, embeds: [embed, embedEth] });
 			} else {
-				return interaction.followUp(`Failed to send funds. Error: ${request.message}`);
+				throw new Error(`Failed to send funds. Error: ${request.message}`);
 			}
 		} catch (error) {
 			console.error(error);
-			return interaction.followUp(`An error occurred: ${error.message}`);
+			throw new Error(`An error occurred: ${error.message}`);
 		}
 	},
 };

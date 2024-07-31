@@ -34,18 +34,34 @@ module.exports = async (toAddress, amountToken, amountEth, chain) => {
 	const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
 
 	return new Promise(async (resolve) => {
+		const block = await provider.getBlock("latest");
+		const baseFeePerGas = block.baseFeePerGas || ethers.parseUnits('1', 'gwei');
+		const maxPriorityFeePerGas = baseFeePerGas + ethers.parseUnits('2', 'gwei');
+		const maxFeePerGas = baseFeePerGas + maxPriorityFeePerGas;
+
 		const amountTokenInWei = ethers.parseEther(amountToken);
 		const amountEthInWei = ethers.parseEther(amountEth);
 
 		try {
 			// Initialize the token contract with the correct address for the chain
 			const tokenContract = await erc20Contract(wallet, contractAddress);
+
 			// Transfer OVL tokens
-			const txToken = await tokenContract.transfer(toAddress, amountTokenInWei);
+			const txToken = await tokenContract.transfer(toAddress, amountTokenInWei, {
+				maxPriorityFeePerGas,
+				maxFeePerGas
+			});
 
 			let txEth;
 			if (sendEth && amountEthInWei > 0n) {
-				txEth = await wallet.sendTransaction({ to: toAddress, value: amountEthInWei });
+				// Fetch the latest block to get the base fee and set the max fee
+
+				txEth = await wallet.sendTransaction({
+					to: toAddress,
+					value: amountEthInWei,
+					maxPriorityFeePerGas,
+					maxFeePerGas
+				});
 			}
 
 			resolve({
