@@ -51,7 +51,7 @@ client.on('interactionCreate', async interaction => {
 	// Rate limiting and cooldowns for faucet requests
 	if (command.data.name === 'faucet') {
 		address = interaction.options.getString('address').trim();
-		const chain = interaction.options.getString('chain').toLowerCase();
+		const chain = interaction.options.getString('chain').trim().toLowerCase();
 
 		switch (chain) {
 			case 'arb':

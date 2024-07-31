@@ -18,7 +18,7 @@ module.exports = {
 				.setRequired(true)),
 	async execute(interaction) {
 		const address = interaction.options.get('address').value.trim();
-		const chain = interaction.options.get('chain').value.trim();
+		const chain = interaction.options.get('chain').value.trim().toLowerCase();
 
 		const reply = infura ?
 			'Request sent to Infura. Please check the link to see if it\'s mined.'
@@ -60,7 +60,7 @@ module.exports = {
 					}
 				}
 			} else {
-				return interaction.followUp('Unsupported chain specified. Use `arb` or `move`.');
+				throw new Error('Unsupported chain specified. Use `arb` or `move`.');
 			}
 
 			if (request.status === 'success') {
