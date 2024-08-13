@@ -21,6 +21,10 @@ module.exports = {
 			}
 		};
 
+		const response = 'Information was requested. Waiting for the response.'
+
+		interaction.reply(response)
+
 		let responseMessage = 'Pong! Provider: ';
 		responseMessage += infura ? 'Infura' : 'Alchemy';
 		responseMessage += '\n';
@@ -47,6 +51,6 @@ module.exports = {
 		}
 
 		responseMessage += `Donate: ${FROM_ADDRESS}`;
-		return interaction.reply(responseMessage);
+		return interaction.followUp({ content: responseMessage });
 	},
 };
