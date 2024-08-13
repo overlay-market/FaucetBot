@@ -1,5 +1,5 @@
 const { Client, Collection, Intents } = require('discord.js');
-const { token, cooldown, approvedRoles } = require('./config.json');
+const { token, approvedRoles, CHAIN_COOLDOWN } = require('./config.json');
 const fs = require('fs');
 const isAddress = require('./utils/address');
 const Keyv = require('keyv');
@@ -47,6 +47,7 @@ client.on('interactionCreate', async interaction => {
 
 	let keyv;
 	let address;
+	let cooldown;
 
 	// Rate limiting and cooldowns for faucet requests
 	if (command.data.name === 'faucet') {
@@ -56,9 +57,11 @@ client.on('interactionCreate', async interaction => {
 		switch (chain) {
 			case 'arb':
 				keyv = keyvArb;
+				cooldown = CHAIN_COOLDOWN.arb
 				break;
 			case 'move':
 				keyv = keyvMove;
+				cooldown = CHAIN_COOLDOWN.move
 				break;
 			default:
 				return interaction.reply('Unsupported chain specified. Use `arb` or `move`.');
@@ -70,9 +73,9 @@ client.on('interactionCreate', async interaction => {
 
 		// Check last transaction timestamp
 		const lastTx = await keyv.get('lastTx');
-		if (lastTx > Date.now() - 15000) {
-			const timeLeft = 15000 - (Date.now() - lastTx);
-			return interaction.reply(`Please wait 15 seconds between requests to prevent nonce issues. Try again in ${timeLeft / 1000}s.`);
+		if (lastTx + cooldown > Date.now()) {
+			const timeLeft = cooldown - (Date.now() - lastTx);
+			return interaction.reply(`Please wait ${cooldown / 1000} seconds between requests to prevent nonce issues. Try again in ${timeLeft / 1000}s.`);
 		}
 
 		// Check if user has requested before

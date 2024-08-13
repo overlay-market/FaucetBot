@@ -16,7 +16,10 @@
 		"move": "0.1",
 		"bera": "0.2"
 	},
-	"cooldown": 3600000,
+	"CHAIN_COOLDOWN": {
+		"arb": 15000,
+		"move": 30000
+	},
 	"amount": "0.1",
 	"maxFeePerGas": 95000000000,
 	"activityType": "",

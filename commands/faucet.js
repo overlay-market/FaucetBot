@@ -1,4 +1,4 @@
-const { amount, amountEth, infura, arbiscanUrl, movementExplorerUrl } = require('../config.json');
+const { amount, infura, arbiscanUrl, movementExplorerUrl, AMOUNT_ETH } = require('../config.json');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 const sendViaInfura = require('../utils/sendViaInfura.js');
@@ -35,8 +35,17 @@ module.exports = {
 			let tokenExplorerUrl = '';
 			let ethExplorerUrl = '';
 			let ethSymbol = '';
+			let amountEth;
 
 			if (chain === 'arb' || chain === 'move') {
+				switch (chain) {
+					case 'arb':
+						amountEth = AMOUNT_ETH.arb;
+						break;
+					case 'move':
+						amountEth = AMOUNT_ETH.move
+						break;
+				}
 				// Send the transaction and get the response
 				request = await sendViaInfura(address, amount, amountEth, chain)
 
