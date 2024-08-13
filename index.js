@@ -2,15 +2,24 @@ const { Client, Collection, Intents } = require('discord.js');
 const { token, cooldown, approvedRoles } = require('./config.json');
 const fs = require('fs');
 const isAddress = require('./utils/address');
-const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
 const Keyv = require('keyv');
-const { KeyvFile } = require('keyv-file')
-const keyv = new Keyv({
-	store: new KeyvFile({
-	  filename: `keyv-data.json`, // the file path to store the data
-	})
-  })
+const { KeyvFile } = require('keyv-file');
+const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MEMBERS] });
 
+// Create Keyv instances for each supported chain
+const keyvArb = new Keyv({
+	store: new KeyvFile({
+		filename: `keyv-data.json`, // File for Arbitrum Sepolia
+	})
+});
+
+const keyvMove = new Keyv({
+	store: new KeyvFile({
+		filename: `keyv-data-move.json`, // File for Move chain
+	})
+});
+
+// Command and event handling
 client.commands = new Collection();
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 const eventFiles = fs.readdirSync('./events').filter(file => file.endsWith('.js'));
@@ -24,8 +33,7 @@ for (const file of eventFiles) {
 	const event = require(`./events/${file}`);
 	if (event.once) {
 		client.once(event.name, (...args) => event.execute(...args));
-	}
-	else {
+	} else {
 		client.on(event.name, (...args) => event.execute(...args));
 	}
 }
@@ -37,21 +45,37 @@ client.on('interactionCreate', async interaction => {
 
 	if (!command) return;
 
+	let keyv;
+	let address;
+
 	// Rate limiting and cooldowns for faucet requests
 	if (command.data.name === 'faucet') {
-		const address = interaction.options.get('address').value.trim();
+		address = interaction.options.getString('address').trim();
+		const chain = interaction.options.getString('chain').trim().toLowerCase();
+
+		switch (chain) {
+			case 'arb':
+				keyv = keyvArb;
+				break;
+			case 'move':
+				keyv = keyvMove;
+				break;
+			default:
+				return interaction.reply('Unsupported chain specified. Use `arb` or `move`.');
+		}
 
 		if (!isAddress(address)) {
 			return interaction.reply('Please enter a valid Ethereum Address');
 		}
 
-		// If the last transaction was less than 15 seconds ago, disallow to prevent nonce reuse (no concurrent transactions ATM)
+		// Check last transaction timestamp
 		const lastTx = await keyv.get('lastTx');
 		if (lastTx > Date.now() - 15000) {
 			const timeLeft = 15000 - (Date.now() - lastTx);
 			return interaction.reply(`Please wait 15 seconds between requests to prevent nonce issues. Try again in ${timeLeft / 1000}s.`);
 		}
 
+		// Check if user has requested before
 		if (!approvedRoles.some(role => interaction.member.roles.cache.has(role))) {
 			const lastRequested = await keyv.get(interaction.user.id);
 			if (lastRequested) {
@@ -62,28 +86,17 @@ client.on('interactionCreate', async interaction => {
 
 	try {
 		await command.execute(interaction);
+
 		if (command.data.name === 'faucet') {
-			// If not an approved role, set the last requested time
 			if (!approvedRoles.some(role => interaction.member.roles.cache.has(role))) {
-				await keyv.set(interaction.user.id, interaction.options.get('address').value.trim());
+				await keyv.set(interaction.user.id, address);
 			}
 			await keyv.set('lastTx', Date.now());
 		}
-	}
-	catch (error) {
+	} catch (error) {
 		console.error(error);
-		await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+		await interaction.followUp({ content: error.message });
 	}
 });
-
-for (const file of eventFiles) {
-	const event = require(`./events/${file}`);
-	if (event.once) {
-		client.once(event.name, (...args) => event.execute(...args));
-	}
-	else {
-		client.on(event.name, (...args) => event.execute(...args));
-	}
-}
 
 client.login(token);
