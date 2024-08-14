@@ -88,14 +88,13 @@ client.on('interactionCreate', async interaction => {
 	}
 
 	try {
-		await command.execute(interaction);
-
 		if (command.data.name === 'faucet') {
 			if (!approvedRoles.some(role => interaction.member.roles.cache.has(role))) {
 				await keyv.set(interaction.user.id, address);
 			}
 			await keyv.set('lastTx', Date.now());
 		}
+		await command.execute(interaction);
 	} catch (error) {
 		console.error(error);
 		await interaction.followUp({ content: error.message });
