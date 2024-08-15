@@ -60,9 +60,10 @@ client.on('interactionCreate', async interaction => {
 				cooldown = CHAIN_COOLDOWN.arb
 				break;
 			case 'move':
-				keyv = keyvMove;
-				cooldown = CHAIN_COOLDOWN.move
-				break;
+				// keyv = keyvMove;
+				// cooldown = CHAIN_COOLDOWN.move
+				// break;
+				return interaction.reply('MOVE chain dispenser is temporary disabled.')
 			default:
 				return interaction.reply('Unsupported chain specified. Use `arb` or `move`.');
 		}
