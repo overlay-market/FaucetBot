@@ -2,7 +2,6 @@ const { amount, infura, arbiscanUrl, movementExplorerUrl, AMOUNT_ETH } = require
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 const sendViaInfura = require('../utils/sendViaInfura.js');
-const getMoveHash = require('../utils/getMoveHash.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -51,10 +50,10 @@ module.exports = {
 
 				if (request.status === 'success') {
 					if (chain === 'move') {
-						tokenTransactionHash = await getMoveHash(request.message);
+						tokenTransactionHash = request.message;
 						tokenExplorerUrl = `${movementExplorerUrl}${tokenTransactionHash}`;
 
-						ethTransactionHash = await getMoveHash(request.messageEth);
+						ethTransactionHash = request.messageEth;
 						ethExplorerUrl = `${movementExplorerUrl}${ethTransactionHash}`;
 
 						ethSymbol = 'MOVE';
