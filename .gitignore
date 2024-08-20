@@ -3,7 +3,7 @@ config.json
 
 # keyv data
 keyv-data.json
-keyv-data-move.json
+keyv-data-[a-z]*.json
 
 # Logs
 logs

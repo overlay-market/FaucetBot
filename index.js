@@ -19,6 +19,12 @@ const keyvMove = new Keyv({
 	})
 });
 
+const keyvBera = new Keyv({
+	store: new KeyvFile({
+		filename: `keyv-data-bera.json`, // File for Bera chain
+	})
+});
+
 // Command and event handling
 client.commands = new Collection();
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
@@ -64,8 +70,12 @@ client.on('interactionCreate', async interaction => {
 				// cooldown = CHAIN_COOLDOWN.move
 				// break;
 				return interaction.reply('MOVE chain dispenser is temporary disabled.')
+			case 'bera':
+				keyv = keyvBera;
+				cooldown = CHAIN_COOLDOWN.bera
+				break;
 			default:
-				return interaction.reply('Unsupported chain specified. Use `arb` or `move`.');
+				return interaction.reply('Unsupported chain specified. Use `arb`, `move`, or `bera`.');
 		}
 
 		if (!isAddress(address)) {
