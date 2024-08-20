@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { INFURA_URL, FROM_ADDRESS, infura, CONTRACT_ADDRESSES, MOVE_URL, PRIVATE_KEY } = require('../config.json');
+const { INFURA_URL, FROM_ADDRESS, infura, CONTRACT_ADDRESSES, MOVE_URL, PRIVATE_KEY, BARTIO_URL } = require('../config.json');
 const ethers = require('ethers');
 const erc20Contract = require('../utils/erc20Contract.js');
 
@@ -18,7 +18,12 @@ module.exports = {
 				contractAddress: CONTRACT_ADDRESSES.move,
 				provider: new ethers.JsonRpcProvider(MOVE_URL),
 				symbol: 'MOVE'
-			}
+			},
+			bera: {
+				contractAddress: CONTRACT_ADDRESSES.bera,
+				provider: new ethers.JsonRpcProvider(BARTIO_URL),
+				symbol: 'BERA'
+			},
 		};
 
 		const response = 'Information was requested. Waiting for the response.'
