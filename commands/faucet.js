@@ -1,4 +1,4 @@
-const { amount, infura, arbiscanUrl, movementExplorerUrl, AMOUNT_ETH } = require('../config.json');
+const { amount, infura, arbiscanUrl, movementExplorerUrl, beraExplorerUrl, AMOUNT_ETH } = require('../config.json');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 const sendViaInfura = require('../utils/sendViaInfura.js');
@@ -9,7 +9,7 @@ module.exports = {
 		.setDescription('Request testnet funds from the faucet')
 		.addStringOption(option =>
 			option.setName('chain')
-				.setDescription('The chain to receive funds from ("arb" for Arbitrum Sepolia, "move" for Move Testnet)')
+				.setDescription('The chain to receive funds from ("arb" Arbitrum Sepolia, "move" Move Testnet, "bera" Bartio Testnet)')
 				.setRequired(true))
 		.addStringOption(option =>
 			option.setName('address')
@@ -29,14 +29,12 @@ module.exports = {
 
 		try {
 			let request;
-			let tokenTransactionHash = '';
-			let ethTransactionHash = '';
 			let tokenExplorerUrl = '';
 			let ethExplorerUrl = '';
 			let ethSymbol = '';
 			let amountEth;
 
-			if (chain === 'arb' || chain === 'move') {
+			if (chain === 'arb' || chain === 'move' || chain === 'bera') {
 				switch (chain) {
 					case 'arb':
 						amountEth = AMOUNT_ETH.arb;
@@ -44,31 +42,36 @@ module.exports = {
 					case 'move':
 						amountEth = AMOUNT_ETH.move
 						break;
+					case 'bera':
+						amountEth = AMOUNT_ETH.bera
+						break;
 				}
 				// Send the transaction and get the response
 				request = await sendViaInfura(address, amount, amountEth, chain)
 
+				const tokenTransactionHash = request.message;
+				const ethTransactionHash = request.messageEth;
+
 				if (request.status === 'success') {
 					if (chain === 'move') {
-						tokenTransactionHash = request.message;
 						tokenExplorerUrl = `${movementExplorerUrl}${tokenTransactionHash}`;
-
-						ethTransactionHash = request.messageEth;
 						ethExplorerUrl = `${movementExplorerUrl}${ethTransactionHash}`;
 
 						ethSymbol = 'MOVE';
-					} else {
-						tokenTransactionHash = request.message;
-						tokenExplorerUrl = `${arbiscanUrl}${tokenTransactionHash}`;
+					} else if (chain === 'bera') {
+						tokenExplorerUrl = `${beraExplorerUrl}${tokenTransactionHash}`;
+						ethExplorerUrl = `${beraExplorerUrl}${ethTransactionHash}`;
 
-						ethTransactionHash = request.messageEth;
+						ethSymbol = 'BERA';
+					} else {
+						tokenExplorerUrl = `${arbiscanUrl}${tokenTransactionHash}`;
 						ethExplorerUrl = `${arbiscanUrl}${ethTransactionHash}`;
 
 						ethSymbol = 'ETH';
 					}
 				}
 			} else {
-				throw new Error('Unsupported chain specified. Use `arb` or `move`.');
+				throw new Error('Unsupported chain specified. Use `arb`, `move`, or `bera`.');
 			}
 
 			if (request.status === 'success') {

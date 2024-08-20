@@ -1,12 +1,12 @@
 /* eslint-disable no-inline-comments */
-const { INFURA_URL, MOVE_URL, PRIVATE_KEY, FROM_ADDRESS, CONTRACT_ADDRESSES } = require('../config.json');
+const { INFURA_URL, MOVE_URL, BARTIO_URL, PRIVATE_KEY, FROM_ADDRESS, CONTRACT_ADDRESSES } = require('../config.json');
 const ethers = require('ethers');
 const erc20Contract = require('../utils/erc20Contract.js');
 
 module.exports = async (toAddress, amountToken, amountEth, chain) => {
 	console.log(`Received new request from ${toAddress} for ${amountToken} OVL and ${amountEth} ETH on chain ${chain}`);
 
-	if (!PRIVATE_KEY || !INFURA_URL || !MOVE_URL || !FROM_ADDRESS) {
+	if (!PRIVATE_KEY || !INFURA_URL || !MOVE_URL || !BARTIO_URL || !FROM_ADDRESS) {
 		return { status: 'error', message: 'Missing environment variables, please ask human to set them up.' };
 	}
 
@@ -24,6 +24,11 @@ module.exports = async (toAddress, amountToken, amountEth, chain) => {
 		case 'move': // Move chain
 			networkUrl = MOVE_URL;
 			contractAddress = CONTRACT_ADDRESSES.move;
+			sendEth = true;
+			break;
+		case 'bera': // Bera chain
+			networkUrl = BARTIO_URL;
+			contractAddress = CONTRACT_ADDRESSES.bera;
 			sendEth = true;
 			break;
 		default:
