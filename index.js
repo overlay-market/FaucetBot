@@ -66,10 +66,9 @@ client.on('interactionCreate', async interaction => {
 				cooldown = CHAIN_COOLDOWN.arb
 				break;
 			case 'move':
-				// keyv = keyvMove;
-				// cooldown = CHAIN_COOLDOWN.move
-				// break;
-				return interaction.reply('MOVE chain dispenser is temporary disabled.')
+				keyv = keyvMove;
+				cooldown = CHAIN_COOLDOWN.move
+				break;
 			case 'bera':
 				keyv = keyvBera;
 				cooldown = CHAIN_COOLDOWN.bera
@@ -82,13 +81,6 @@ client.on('interactionCreate', async interaction => {
 			return interaction.reply('Please enter a valid Ethereum Address');
 		}
 
-		// Check last transaction timestamp
-		const lastTx = await keyv.get('lastTx');
-		if (lastTx + cooldown > Date.now()) {
-			const timeLeft = cooldown - (Date.now() - lastTx);
-			return interaction.reply(`Please wait ${cooldown / 1000} seconds between requests to prevent nonce issues. Try again in ${timeLeft / 1000}s.`);
-		}
-
 		// Check if user has requested before
 		if (!approvedRoles.some(role => interaction.member.roles.cache.has(role))) {
 			const lastRequested = await keyv.get(interaction.user.id);
@@ -96,22 +88,42 @@ client.on('interactionCreate', async interaction => {
 				return interaction.reply(`You can only request funds once.`);
 			}
 		}
+
+		if (chain === 'move') {
+			// Check last transaction timestamp
+			const currentlyFauceting = await keyv.get('currentlyFauceting');
+			if (currentlyFauceting) {
+				return interaction.reply('Please wait until the current withdraw is finished.');
+			}
+		} else {
+			// Check last transaction timestamp
+			const lastTx = await keyv.get('lastTx');
+			if (lastTx + cooldown > Date.now()) {
+				const timeLeft = cooldown - (Date.now() - lastTx);
+				return interaction.reply(`Please wait ${cooldown / 1000} seconds between requests to prevent nonce issues. Try again in ${timeLeft / 1000}s.`);
+			}
+		}
+
 	}
 
 	try {
 		if (command.data.name === 'faucet') {
+			await keyv.set('currentlyFauceting', true);
 			await keyv.set('lastTx', Date.now());
 		}
 
 		await command.execute(interaction);
 
 		if (command.data.name === 'faucet') {
+			await keyv.set('currentlyFauceting', false);
+
 			if (!approvedRoles.some(role => interaction.member.roles.cache.has(role))) {
 				await keyv.set(interaction.user.id, address);
 			}
 		}
 	} catch (error) {
 		console.error(error);
+		await keyv.set('currentlyFauceting', false);
 		await interaction.followUp({ content: error.message });
 	}
 });

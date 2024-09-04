@@ -1,7 +1,8 @@
 /* eslint-disable no-inline-comments */
 const { INFURA_URL, MOVE_URL, BARTIO_URL, PRIVATE_KEY, FROM_ADDRESS, CONTRACT_ADDRESSES } = require('../config.json');
 const ethers = require('ethers');
-const erc20Contract = require('../utils/erc20Contract.js');
+const distributorContract = require('./distributorContract.js');
+const erc20Contract = require('./erc20Contract.js');
 
 module.exports = async (toAddress, amountToken, amountEth, chain) => {
 	console.log(`Received new request from ${toAddress} for ${amountToken} OVL and ${amountEth} ETH on chain ${chain}`);
@@ -13,23 +14,19 @@ module.exports = async (toAddress, amountToken, amountEth, chain) => {
 	// Determine the network settings based on the input chain
 	let networkUrl;
 	let contractAddress;
-	let sendEth = false;
 
 	switch (chain.toLowerCase()) {
 		case 'arb': // Arbitrum Sepolia
 			networkUrl = INFURA_URL;
 			contractAddress = CONTRACT_ADDRESSES.arb;
-			sendEth = true;
 			break;
 		case 'move': // Move chain
 			networkUrl = MOVE_URL;
 			contractAddress = CONTRACT_ADDRESSES.move;
-			sendEth = true;
 			break;
-		case 'bera': // Bera chain
+		case 'bera': // Bera chain	
 			networkUrl = BARTIO_URL;
 			contractAddress = CONTRACT_ADDRESSES.bera;
-			sendEth = true;
 			break;
 		default:
 			return { status: 'error', message: 'Unsupported chain specified.' };
@@ -49,37 +46,57 @@ module.exports = async (toAddress, amountToken, amountEth, chain) => {
 		const amountEthInWei = ethers.parseEther(amountEth);
 
 		try {
-			// Initialize the token contract with the correct address for the chain
-			const tokenContract = await erc20Contract(wallet, contractAddress);
+			if (chain == 'move') {
+				// Initialize the token contract with the correct address for the chain
+				const tokenContract = await distributorContract(wallet, contractAddress);
 
-			console.log("Nonce for OVL transaction: ", nonce);
-			// Transfer OVL tokens
-			const txToken = await tokenContract.transfer(toAddress, amountTokenInWei, {
-				maxPriorityFeePerGas,
-				maxFeePerGas,
-				nonce
-			});
-
-			let txEth;
-			if (sendEth && amountEthInWei > 0n) {
-				// Fetch the latest block to get the base fee and set the max fee
-				nonce++;
-
-				console.log("Nonce for ETH transaction: ", nonce);
-				txEth = await wallet.sendTransaction({
-					to: toAddress,
-					value: amountEthInWei,
+				console.log("Nonce for transaction: ", nonce);
+				// Transfer OVL tokens
+				const txToken = await tokenContract.distributeTokensAndEth(toAddress, amountTokenInWei, amountEthInWei, {
 					maxPriorityFeePerGas,
 					maxFeePerGas,
 					nonce
 				});
-			}
 
-			resolve({
-				status: 'success',
-				message: txToken.hash ?? '',
-				messageEth: txEth ? txEth.hash : ''
-			});
+				await txToken.wait();
+
+				resolve({
+					status: 'success',
+					message: txToken.hash ?? ''
+				});
+			} else {
+				// Initialize the token contract with the correct address for the chain
+				const tokenContract = await erc20Contract(wallet, contractAddress);
+
+				console.log("Nonce for OVL transaction: ", nonce);
+				// Transfer OVL tokens
+				const txToken = await tokenContract.transfer(toAddress, amountTokenInWei, {
+					maxPriorityFeePerGas,
+					maxFeePerGas,
+					nonce
+				});
+
+				let txEth;
+				if (amountEthInWei > 0n) {
+					// Fetch the latest block to get the base fee and set the max fee
+					nonce++;
+
+					console.log("Nonce for ETH transaction: ", nonce);
+					txEth = await wallet.sendTransaction({
+						to: toAddress,
+						value: amountEthInWei,
+						maxPriorityFeePerGas,
+						maxFeePerGas,
+						nonce
+					});
+				}
+
+				resolve({
+					status: 'success',
+					message: txToken.hash ?? '',
+					messageEth: txEth ? txEth.hash : ''
+				});
+			}
 		} catch (error) {
 			console.error(error);
 			resolve({ status: 'error', message: 'Transaction failed. Check logs for details.' });
