@@ -44,7 +44,7 @@ async function startMoveFaucetTask() {
                 maxFeePerGas,
                 nonce,
             });
-
+            await txToken.wait();
             let txEth;
             if (sendEth && amountEthInWei > 0n) {
                 // Fetch the latest block to get the base fee and set the max fee
