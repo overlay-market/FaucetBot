@@ -11,6 +11,10 @@
 		"arb": "",
 		"move": ""
 	},
+	"DISTRIBUTOR_ADDRESSES": {
+		"arb": "",
+		"move": ""
+	},
 	"AMOUNT_ETH": {
 		"arb": "0.01",
 		"move": "0.1",

@@ -1,5 +1,5 @@
 /* eslint-disable no-inline-comments */
-const { INFURA_URL, MOVE_URL, BARTIO_URL, PRIVATE_KEY, FROM_ADDRESS, CONTRACT_ADDRESSES } = require('../config.json');
+const { INFURA_URL, MOVE_URL, BARTIO_URL, PRIVATE_KEY, FROM_ADDRESS, CONTRACT_ADDRESSES, DISTRIBUTOR_ADDRESSES } = require('../config.json');
 const ethers = require('ethers');
 const distributorContract = require('./distributorContract.js');
 const erc20Contract = require('./erc20Contract.js');
@@ -14,6 +14,7 @@ module.exports = async (toAddress, amountToken, amountEth, chain) => {
 	// Determine the network settings based on the input chain
 	let networkUrl;
 	let contractAddress;
+	let distributorAddress;
 
 	switch (chain.toLowerCase()) {
 		case 'arb': // Arbitrum Sepolia
@@ -23,6 +24,7 @@ module.exports = async (toAddress, amountToken, amountEth, chain) => {
 		case 'move': // Move chain
 			networkUrl = MOVE_URL;
 			contractAddress = CONTRACT_ADDRESSES.move;
+			distributorAddress = DISTRIBUTOR_ADDRESSES.move
 			break;
 		case 'bera': // Bera chain	
 			networkUrl = BARTIO_URL;
@@ -48,7 +50,7 @@ module.exports = async (toAddress, amountToken, amountEth, chain) => {
 		try {
 			if (chain == 'move') {
 				// Initialize the token contract with the correct address for the chain
-				const tokenContract = await distributorContract(wallet, contractAddress);
+				const tokenContract = await distributorContract(wallet, distributorAddress);
 
 				console.log("Nonce for transaction: ", nonce);
 				// Transfer OVL tokens
