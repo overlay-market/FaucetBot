@@ -20,7 +20,7 @@ module.exports = {
 		const chain = interaction.options.get('chain').value.trim().toLowerCase();
 
 		const reply = infura ?
-			'Request sent to Infura. Please check the link to see if it\'s mined.'
+			'Request sent. Please check the link to see if it\'s mined.'
 			:
 			// TODO: Change this to "Please wait for it to be mined" once Alchemy Notify is set up.
 			'Request sent to Alchemy. Please check the link to see if it\'s mined.';
@@ -75,20 +75,31 @@ module.exports = {
 			}
 
 			if (request.status === 'success') {
-				const embed = new MessageEmbed()
-					.setColor('#3BA55C')
-					.setDescription(
-						`Token Transaction: [View on Explorer](${tokenExplorerUrl})`
+				if (chain === 'move') {
+					const embed = new MessageEmbed()
+						.setColor('#3BA55C')
+						.setDescription(
+							`Transaction: [View on Explorer](${tokenExplorerUrl})`
 
-					);
+						);
 
-				const embedEth = new MessageEmbed()
-					.setColor('#3BA55C')
-					.setDescription(
-						`${ethSymbol} Transaction: [View on Explorer](${ethExplorerUrl})`
-					);
+					return interaction.followUp({ content: `Transaction for ${amount} OVL and ${amountEth} ${ethSymbol} created.`, embeds: [embed] });
+				} else {
+					const embed = new MessageEmbed()
+						.setColor('#3BA55C')
+						.setDescription(
+							`Token Transaction: [View on Explorer](${tokenExplorerUrl})`
 
-				return interaction.followUp({ content: `Transaction for ${amount} OVL and ${amountEth} ${ethSymbol} created.`, embeds: [embed, embedEth] });
+						);
+
+					const embedEth = new MessageEmbed()
+						.setColor('#3BA55C')
+						.setDescription(
+							`${ethSymbol} Transaction: [View on Explorer](${ethExplorerUrl})`
+						);
+
+					return interaction.followUp({ content: `Transaction for ${amount} OVL and ${amountEth} ${ethSymbol} created.`, embeds: [embed, embedEth] });
+				}
 			} else {
 				throw new Error(`Failed to send funds. Error: ${request.message}`);
 			}
