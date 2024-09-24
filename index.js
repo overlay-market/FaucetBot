@@ -92,7 +92,10 @@ client.on('interactionCreate', async interaction => {
 		if (chain === 'move') {
 			// Check last transaction timestamp
 			const currentlyFauceting = await keyv.get('currentlyFauceting');
-			if (currentlyFauceting) {
+			// Check last transaction timestamp
+			const lastTx = await keyv.get('lastTx');
+			// If 10 minutes have passed since the last transaction and currentlyFauceting is still true, let it go through
+			if (currentlyFauceting && (lastTx + 10 * 60 * 1000 > Date.now)) {
 				return interaction.reply('Please wait until the current withdraw is finished.');
 			}
 		} else {
