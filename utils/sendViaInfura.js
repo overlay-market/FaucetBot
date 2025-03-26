@@ -1,17 +1,17 @@
 /* eslint-disable no-inline-comments */
-const { BARTIO_URL, PRIVATE_KEY, FROM_ADDRESS, CONTRACT_ADDRESSES } = require('../config.json');
+const { ALCHEMY_URL, PRIVATE_KEY, FROM_ADDRESS, CONTRACT_ADDRESSES } = require('../config.json');
 const ethers = require('ethers');
 const erc20Contract = require('./erc20Contract.js');
 
 module.exports = async (toAddress, amountToken, amountEth) => {
     console.log(`Received new request from ${toAddress} for ${amountToken} OVL and ${amountEth} ETH on BERA chain`);
 
-    if (!PRIVATE_KEY || !BARTIO_URL || !FROM_ADDRESS) {
+    if (!PRIVATE_KEY || !ALCHEMY_URL || !FROM_ADDRESS) {
         return { status: 'error', message: 'Missing environment variables, please ask human to set them up.' };
     }
 
-    const networkUrl = BARTIO_URL;
-    const contractAddress = CONTRACT_ADDRESSES.bera;
+    const networkUrl = ALCHEMY_URL;
+    const contractAddress = CONTRACT_ADDRESSES.arb;
     
     const provider = new ethers.JsonRpcProvider(networkUrl);
     const wallet = new ethers.Wallet(PRIVATE_KEY, provider);

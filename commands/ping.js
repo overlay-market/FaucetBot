@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { BARTIO_URL, FROM_ADDRESS, infura, CONTRACT_ADDRESSES, PRIVATE_KEY } = require('../config.json');
+const { ALCHEMY_URL, FROM_ADDRESS, infura, CONTRACT_ADDRESSES, PRIVATE_KEY } = require('../config.json');
 const ethers = require('ethers');
 const erc20Contract = require('../utils/erc20Contract.js');
 
@@ -13,9 +13,9 @@ module.exports = {
         await interaction.reply(response);
 
         try {
-            const provider = new ethers.JsonRpcProvider(BARTIO_URL);
+            const provider = new ethers.JsonRpcProvider(ALCHEMY_URL);
             const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
-            const tokenContract = await erc20Contract(wallet, CONTRACT_ADDRESSES.bera);
+            const tokenContract = await erc20Contract(wallet, CONTRACT_ADDRESSES.arb);
             const fromAddress = ethers.getAddress(FROM_ADDRESS);
 
             const rawBalance = await provider.getBalance(fromAddress);
@@ -30,13 +30,13 @@ module.exports = {
             let responseMessage = 'Pong! Provider: ';
             responseMessage += infura ? 'Infura' : 'Alchemy';
             responseMessage += '\n';
-            responseMessage += `Current balance on BERA: ${balanceShort} BERA. Current ERC20 balance: ${balanceTokenShort} OVL.\n`;
+            responseMessage += `Current balance on Arbitrum Sepolia: ${balanceShort} ETH. Current ERC20 balance: ${balanceTokenShort} OVL.\n`;
             responseMessage += `Donate: ${FROM_ADDRESS}`;
 
             return interaction.followUp({ content: responseMessage });
         } catch (error) {
             console.error(error);
-            return interaction.followUp({ content: 'Error getting balance for BERA. Please check logs.' });
+            return interaction.followUp({ content: 'Error getting balance for Arbitrum Sepolia. Please check logs.' });
         }
     },
 };

@@ -9,7 +9,7 @@ const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_
 // Create Keyv instance for BERA chain
 const keyv = new Keyv({
     store: new KeyvFile({
-        filename: `keyv-data-bera.json`, // File for Bera chain
+        filename: `keyv-data.json`, // File for Bera chain
     })
 });
 
@@ -40,7 +40,7 @@ client.on('interactionCreate', async interaction => {
     if (!command) return;
 
     let address;
-    const cooldown = CHAIN_COOLDOWN.bera;
+    const cooldown = CHAIN_COOLDOWN.arb;
 
     // Rate limiting and cooldowns for faucet requests
     if (command.data.name === 'faucet') {
