@@ -6,23 +6,11 @@ const Keyv = require('keyv');
 const { KeyvFile } = require('keyv-file');
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MEMBERS] });
 
-// Create Keyv instances for each supported chain
-const keyvArb = new Keyv({
-	store: new KeyvFile({
-		filename: `keyv-data.json`, // File for Arbitrum Sepolia
-	})
-});
-
-const keyvMove = new Keyv({
-	store: new KeyvFile({
-		filename: `keyv-data-move.json`, // File for Move chain
-	})
-});
-
-const keyvBera = new Keyv({
-	store: new KeyvFile({
-		filename: `keyv-data-bera.json`, // File for Bera chain
-	})
+// Create Keyv instance for BERA chain
+const keyv = new Keyv({
+    store: new KeyvFile({
+        filename: `keyv-data.json`, // File for Bera chain
+    })
 });
 
 // Command and event handling
@@ -31,101 +19,69 @@ const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('
 const eventFiles = fs.readdirSync('./events').filter(file => file.endsWith('.js'));
 
 for (const file of commandFiles) {
-	const command = require(`./commands/${file}`);
-	client.commands.set(command.data.name, command);
+    const command = require(`./commands/${file}`);
+    client.commands.set(command.data.name, command);
 }
 
 for (const file of eventFiles) {
-	const event = require(`./events/${file}`);
-	if (event.once) {
-		client.once(event.name, (...args) => event.execute(...args));
-	} else {
-		client.on(event.name, (...args) => event.execute(...args));
-	}
+    const event = require(`./events/${file}`);
+    if (event.once) {
+        client.once(event.name, (...args) => event.execute(...args));
+    } else {
+        client.on(event.name, (...args) => event.execute(...args));
+    }
 }
 
 client.on('interactionCreate', async interaction => {
-	if (!interaction.isCommand()) return;
+    if (!interaction.isCommand()) return;
 
-	const command = client.commands.get(interaction.commandName);
+    const command = client.commands.get(interaction.commandName);
 
-	if (!command) return;
+    if (!command) return;
 
-	let keyv;
-	let address;
-	let cooldown;
+    let address;
+    const cooldown = CHAIN_COOLDOWN.arb;
 
-	// Rate limiting and cooldowns for faucet requests
-	if (command.data.name === 'faucet') {
-		address = interaction.options.getString('address').trim();
-		const chain = interaction.options.getString('chain').trim().toLowerCase();
+    // Rate limiting and cooldowns for faucet requests
+    if (command.data.name === 'faucet') {
+        address = interaction.options.getString('address').trim();
 
-		switch (chain) {
-			case 'arb':
-				keyv = keyvArb;
-				cooldown = CHAIN_COOLDOWN.arb
-				break;
-			case 'move':
-				keyv = keyvMove;
-				cooldown = CHAIN_COOLDOWN.move
-				break;
-			case 'bera':
-				keyv = keyvBera;
-				cooldown = CHAIN_COOLDOWN.bera
-				break;
-			default:
-				return interaction.reply('Unsupported chain specified. Use `arb`, `move`, or `bera`.');
-		}
+        if (!isAddress(address)) {
+            return interaction.reply('Please enter a valid Ethereum Address');
+        }
 
-		if (!isAddress(address)) {
-			return interaction.reply('Please enter a valid Ethereum Address');
-		}
+        // Check if user has requested before
+        if (!approvedRoles.some(role => interaction.member.roles.cache.has(role))) {
+            const lastRequested = await keyv.get(interaction.user.id);
+            if (lastRequested) {
+                return interaction.reply(`You can only request funds once.`);
+            }
+        }
 
-		// Check if user has requested before
-		if (!approvedRoles.some(role => interaction.member.roles.cache.has(role))) {
-			const lastRequested = await keyv.get(interaction.user.id);
-			if (lastRequested) {
-				return interaction.reply(`You can only request funds once.`);
-			}
-		}
+        // Check last transaction timestamp
+        const lastTx = await keyv.get('lastTx');
+        if (lastTx + cooldown > Date.now()) {
+            const timeLeft = cooldown - (Date.now() - lastTx);
+            return interaction.reply(`Please wait ${cooldown / 1000} seconds between requests to prevent nonce issues. Try again in ${timeLeft / 1000}s.`);
+        }
+    }
 
-		if (chain === 'move') {
-			// Check last transaction timestamp
-			const currentlyFauceting = await keyv.get('currentlyFauceting');
-			if (currentlyFauceting) {
-				return interaction.reply('Please wait until the current withdraw is finished.');
-			}
-		} else {
-			// Check last transaction timestamp
-			const lastTx = await keyv.get('lastTx');
-			if (lastTx + cooldown > Date.now()) {
-				const timeLeft = cooldown - (Date.now() - lastTx);
-				return interaction.reply(`Please wait ${cooldown / 1000} seconds between requests to prevent nonce issues. Try again in ${timeLeft / 1000}s.`);
-			}
-		}
+    try {
+        if (command.data.name === 'faucet') {
+            await keyv.set('lastTx', Date.now());
+        }
 
-	}
+        await command.execute(interaction);
 
-	try {
-		if (command.data.name === 'faucet') {
-			await keyv.set('currentlyFauceting', true);
-			await keyv.set('lastTx', Date.now());
-		}
-
-		await command.execute(interaction);
-
-		if (command.data.name === 'faucet') {
-			await keyv.set('currentlyFauceting', false);
-
-			if (!approvedRoles.some(role => interaction.member.roles.cache.has(role))) {
-				await keyv.set(interaction.user.id, address);
-			}
-		}
-	} catch (error) {
-		console.error(error);
-		await keyv.set('currentlyFauceting', false);
-		await interaction.followUp({ content: error.message });
-	}
+        if (command.data.name === 'faucet') {
+            if (!approvedRoles.some(role => interaction.member.roles.cache.has(role))) {
+                await keyv.set(interaction.user.id, address);
+            }
+        }
+    } catch (error) {
+        console.error(error);
+        await interaction.followUp({ content: error.message });
+    }
 });
 
 client.login(token);
