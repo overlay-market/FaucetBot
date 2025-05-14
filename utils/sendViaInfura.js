@@ -1,37 +1,37 @@
 /* eslint-disable no-inline-comments */
-const { ALCHEMY_URL, PRIVATE_KEY, FROM_ADDRESS, CONTRACT_ADDRESSES } = require('../config.json');
+const { BNB_URL, PRIVATE_KEY, FROM_ADDRESS, CONTRACT_ADDRESSES } = require('../config.json');
 const ethers = require('ethers');
 const erc20Contract = require('./erc20Contract.js');
 
 module.exports = async (toAddress, amountToken, amountEth) => {
-    console.log(`Received new request from ${toAddress} for ${amountToken} OVL and ${amountEth} ETH on BERA chain`);
+    console.log(`Received new request from ${toAddress} for ${amountToken} BNB Test Token and ${amountEth} BNB on BNB Testnet`);
 
-    if (!PRIVATE_KEY || !ALCHEMY_URL || !FROM_ADDRESS) {
-        return { status: 'error', message: 'Missing environment variables, please ask human to set them up.' };
+    if (!PRIVATE_KEY || !BNB_URL || !FROM_ADDRESS) {
+        return { status: 'error', message: 'Missing environment variables, please check BNB_URL, PRIVATE_KEY, and FROM_ADDRESS in config.json.' };
     }
 
-    const networkUrl = ALCHEMY_URL;
-    const contractAddress = CONTRACT_ADDRESSES.arb;
+    const networkUrl = BNB_URL;
+    const contractAddress = CONTRACT_ADDRESSES.bnb;
     
     const provider = new ethers.JsonRpcProvider(networkUrl);
     const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
 
     return new Promise(async (resolve) => {
-        const block = await provider.getBlock("latest");
-        const baseFeePerGas = block.baseFeePerGas || ethers.parseUnits('1', 'gwei');
-        const maxPriorityFeePerGas = baseFeePerGas + ethers.parseUnits('2', 'gwei');
-        const maxFeePerGas = baseFeePerGas + maxPriorityFeePerGas;
-        let nonce = await wallet.getNonce('latest');
-
-        const amountTokenInWei = ethers.parseEther(amountToken);
-        const amountEthInWei = ethers.parseEther(amountEth);
-
         try {
+            const block = await provider.getBlock("latest");
+            const baseFeePerGas = block.baseFeePerGas || ethers.parseUnits('1', 'gwei');
+            const maxPriorityFeePerGas = baseFeePerGas + ethers.parseUnits('2', 'gwei');
+            const maxFeePerGas = baseFeePerGas + maxPriorityFeePerGas;
+            let nonce = await wallet.getNonce('latest');
+
+            const amountTokenInWei = ethers.parseEther(amountToken);
+            const amountEthInWei = ethers.parseEther(amountEth);
+
             // Initialize the token contract
             const tokenContract = await erc20Contract(wallet, contractAddress);
 
-            console.log("Nonce for OVL transaction: ", nonce);
-            // Transfer OVL tokens
+            console.log("Nonce for BNB Test Token transaction: ", nonce);
+            // Transfer BNB Test tokens
             const txToken = await tokenContract.transfer(toAddress, amountTokenInWei, {
                 maxPriorityFeePerGas,
                 maxFeePerGas,
@@ -43,7 +43,7 @@ module.exports = async (toAddress, amountToken, amountEth) => {
                 // Fetch the latest block to get the base fee and set the max fee
                 nonce++;
 
-                console.log("Nonce for ETH transaction: ", nonce);
+                console.log("Nonce for BNB transaction: ", nonce);
                 txEth = await wallet.sendTransaction({
                     to: toAddress,
                     value: amountEthInWei,
@@ -60,7 +60,7 @@ module.exports = async (toAddress, amountToken, amountEth) => {
             });
         } catch (error) {
             console.error(error);
-            resolve({ status: 'error', message: 'Transaction failed. Check logs for details.' });
+            resolve({ status: 'error', message: `Transaction failed: ${error.message}` });
         }
     });
 };

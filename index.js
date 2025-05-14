@@ -6,10 +6,10 @@ const Keyv = require('keyv');
 const { KeyvFile } = require('keyv-file');
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MEMBERS] });
 
-// Create Keyv instance for BERA chain
+// Create Keyv instance for BNB chain
 const keyv = new Keyv({
     store: new KeyvFile({
-        filename: `keyv-data.json`, // File for Bera chain
+        filename: `keyv-data-bnb.json`, // File for BNB chain
     })
 });
 
@@ -40,7 +40,7 @@ client.on('interactionCreate', async interaction => {
     if (!command) return;
 
     let address;
-    const cooldown = CHAIN_COOLDOWN.arb;
+    const cooldown = CHAIN_COOLDOWN.bnb || 15000; // Default to 15 seconds if not set
 
     // Rate limiting and cooldowns for faucet requests
     if (command.data.name === 'faucet') {
