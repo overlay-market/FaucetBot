@@ -40,7 +40,7 @@ module.exports = {
                 embeds.push(tokenEmbed);
                 
                 // Only add ETH transaction embed if AMOUNT_ETH is not 0
-                let responseMessage = `Transaction for ${amount} BNB Test Token`;
+                let responseMessage = `Transaction for ${amount} OVL`;
                 
                 if (parseFloat(amountEth) > 0 && ethTransactionHash) {
                     const ethExplorerUrl = `${bnbExplorerUrl}${ethTransactionHash}`;

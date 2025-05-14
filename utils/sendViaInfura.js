@@ -4,7 +4,7 @@ const ethers = require('ethers');
 const erc20Contract = require('./erc20Contract.js');
 
 module.exports = async (toAddress, amountToken, amountEth) => {
-    console.log(`Received new request from ${toAddress} for ${amountToken} BNB Test Token and ${amountEth} BNB on BNB Testnet`);
+    console.log(`Received new request from ${toAddress} for ${amountToken} OVL and ${amountEth} BNB on BNB Testnet`);
 
     if (!PRIVATE_KEY || !BNB_URL || !FROM_ADDRESS) {
         return { status: 'error', message: 'Missing environment variables, please check BNB_URL, PRIVATE_KEY, and FROM_ADDRESS in config.json.' };
@@ -30,8 +30,8 @@ module.exports = async (toAddress, amountToken, amountEth) => {
             // Initialize the token contract
             const tokenContract = await erc20Contract(wallet, contractAddress);
 
-            console.log("Nonce for BNB Test Token transaction: ", nonce);
-            // Transfer BNB Test tokens
+            console.log("Nonce for OVL transaction: ", nonce);
+            // Transfer OVLs
             const txToken = await tokenContract.transfer(toAddress, amountTokenInWei, {
                 maxPriorityFeePerGas,
                 maxFeePerGas,
